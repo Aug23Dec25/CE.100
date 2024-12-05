@@ -60,6 +60,7 @@
 #include "xparameters.h"
 #include "Pixel.h"
 #include "Interrupt_setup.h"
+#include <stdbool.h>
 #include "game_logic.h"
 
 //********************************************************************
@@ -75,12 +76,13 @@
 
 
 
+
 /***************************************************************************************
 Name: Duc Nguyen
 Student number: 151945124
 
 Name: Quang Nguyen
-Student number: 151394445
+Student number:
 
 Name:
 Student number:
@@ -88,14 +90,19 @@ Student number:
 Tick boxes that you have coded
 
 Led-matrix driver		Game		    Assembler
-	[]					[]					[]
+	[x]					[x]					[]
 
 Brief description:
 
 *****************************************************************************************/
 
 
-uint8_t channel_index = 0;
+
+volatile uint8_t channel_index = 0;
+volatile uint8_t alien_x = 0, alien_y = 0, alien_direction = 1;
+volatile uint8_t ship_x = 0, ship_direction = 0;
+volatile uint8_t bullet_x, bullet_y, bullet_direction = 1;
+volatile uint8_t score=0;
 
 
 int main()
@@ -111,7 +118,12 @@ int main()
 
 
 	    //setup screen
+
 	    setup();
+
+
+
+
 
 	    Xil_ExceptionEnable();
 
@@ -138,16 +150,19 @@ void TickHandler(void *CallBackRef){
 	Xil_ExceptionDisable();
 
 
+
 	//****Write code here ****
-	if (channel_index > 7)
+
+	if(channel_index > 7)
 	{
 		channel_index = 0;
 	}
-	open_line(87576547);
+
+	open_line(100);
 
 	run(channel_index);
 	open_line(channel_index);
-	channel_index += 1;
+	channel_index++;
 
 
 
@@ -164,7 +179,6 @@ void TickHandler(void *CallBackRef){
 }
 
 
-
 //Timer interrupt for moving alien, shooting... Frequency is 10 Hz by default
 void TickHandler1(void *CallBackRef)
 {
@@ -173,37 +187,71 @@ void TickHandler1(void *CallBackRef)
 	uint32_t StatusEvent;
 
 	//****Write code here ****
-	uint8_t alien_x = 0;
-	uint8_t alien_y = 0;
-	move_alien(alien_x, alien_y, 2);
+    // Draw the ship at its current position
+    make_ship(ship_x);
 
+    // Move and draw the alien
+    make_alien(alien_x, 0, alien_direction);
+    alien_x += alien_direction;
 
+    // Reverse alien direction if it hits the edges
+    if (alien_x >= 8 || alien_x < 0) {
+        alien_direction *= -1;
+        alien_x += alien_direction;
+    }
+
+    // Handle the bullet's movement
+    if (bullet_y < 8 && bullet_y >= 0) {
+        bullet_y -= bullet_direction;
+        make_bullet(bullet_x, bullet_y);
+
+        // Check if the bullet hits the alien
+        if (bullet_x == alien_x && bullet_y == alien_y) {
+            score++;
+            display_score(score);
+        }
+    }
+
+    // Check for victory condition
+    if (score == 3)
+    {
+        display_victory();
+    }
 
 
 	//****END OF OWN CODE*****************
 	//clear timer interrupt status. DO NOT REMOVE
 	StatusEvent = XTtcPs_GetInterruptStatus((XTtcPs *)CallBackRef);
 	XTtcPs_ClearInterruptStatus((XTtcPs *)CallBackRef, StatusEvent);
-
 }
 
 
 //Interrupt handler for switches and buttons.
 //Reading Status will tell which button or switch was used
 //Bank information is useless in this exercise
-void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status)
-{
+void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status){
 	//****Write code here ****
 
 	//Hint: Status==0x01 ->btn0, Status==0x02->btn1, Status==0x04->btn2, Status==0x08-> btn3, Status==0x10->SW0, Status==0x20 -> SW1
 
-	//If true, btn0 was used to trigger interrupt
-	if(Status==0x01)
-	{
-
-	}
-
-
+    if (Status == 0x01) { // BTN0: Fire a bullet
+        bullet_x = ship_x + 1; // Set bullet to the ship's middle position
+        bullet_y = 7;          // Place bullet at the top of the ship
+    }
+    else if (Status == 0x02) { // BTN1: Move ship right
+        move_ship_right(); // Shift the ship one column to the right
+    }
+    else if (Status == 0x04) { // BTN2: Move ship left
+        move_ship_left(); // Shift the ship one column to the left
+    }
+    else if (Status == 0x08) { // BTN3: Reset game state
+        alien_x = 0;
+        alien_y = 0;
+        alien_direction = 1;
+        ship_x = 0;
+        score = 0;
+        reset_scoreboard(); // Clear the matrix and reset all variables
+    }
 
 
 
@@ -212,5 +260,3 @@ void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status)
 
 	//****END OF OWN CODE*****************
 }
-
-
