@@ -82,7 +82,7 @@ Name: Duc Nguyen
 Student number: 151945124
 
 Name: Quang Nguyen
-Student number:
+Student number: 151394445
 
 Name:
 Student number:
@@ -103,6 +103,7 @@ volatile uint8_t alien_x = 0, alien_y = 0, alien_direction = 1;
 volatile uint8_t ship_x = 0, ship_direction = 0;
 volatile uint8_t bullet_x, bullet_y, bullet_direction = 1;
 volatile uint8_t score=0;
+volatile uint8_t won_flag = 0;
 
 
 int main()
@@ -250,6 +251,7 @@ void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status){
         alien_direction = 1;
         ship_x = 0;
         score = 0;
+        won_flag = 0;
         reset_scoreboard(); // Clear the matrix and reset all variables
     }
 

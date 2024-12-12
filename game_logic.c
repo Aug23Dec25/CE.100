@@ -4,6 +4,7 @@
 extern uint8_t ship_x;
 extern uint8_t bullet_direction;
 extern uint8_t bullet_y;
+extern uint8_t won_flag;
 
 /**
  * @brief Draws the alien at the specified position and clears its previous position.
@@ -11,8 +12,10 @@ extern uint8_t bullet_y;
  * @param y Alien's current y-coordinate.
  * @param direction Alien's movement direction (1 for right, -1 for left).
  */
-void make_alien(uint8_t x, uint8_t y, uint8_t direction) {
-    SetPixel(x, y, 0, 128, 0); // Draw the alien (green pixel)
+void make_alien(uint8_t x, uint8_t y, uint8_t direction)
+{
+	if (won_flag == 1) return;
+    SetPixel(x, y, 104, 187, 89); // Draw the alien (green pixel)
 
     // Clear the alien's previous position
     uint8_t prev_x = x - direction;
@@ -25,18 +28,22 @@ void make_alien(uint8_t x, uint8_t y, uint8_t direction) {
  * @brief Draws the ship at its current position on the LED matrix.
  * @param ship_x The current x-coordinate of the ship's leftmost pixel.
  */
-void make_ship(uint8_t ship_x) {
+void make_ship(uint8_t ship_x)
+{
+	if (won_flag == 1) return;
     // Draw the ship (sky-blue color)
     for (uint8_t i = 0; i < 3; i++) {
-        SetPixel(ship_x + i, 6, 128, 0, 128);
+        SetPixel(ship_x + i, 6, 56, 149, 211);
     }
-    SetPixel(ship_x + 1, 5, 128, 0, 128); // Top point of the ship
+    SetPixel(ship_x + 1, 5, 56, 149, 211); // Top point of the ship
 }
 
 /**
  * @brief Moves the ship one position to the right, ensuring it stays within bounds.
  */
-void move_ship_right() {
+void move_ship_right()
+{
+	if (won_flag == 1) return;
     // Clear the ship's current position
     for (uint8_t i = 0; i < 3; i++) {
         SetPixel(ship_x + i, 6, 0, 0, 0);
@@ -55,7 +62,9 @@ void move_ship_right() {
 /**
  * @brief Moves the ship one position to the left, ensuring it stays within bounds.
  */
-void move_ship_left() {
+void move_ship_left()
+{
+	if (won_flag == 1) return;
     // Clear the ship's current position
     for (uint8_t i = 0; i < 3; i++) {
         SetPixel(ship_x + i, 6, 0, 0, 0);
@@ -114,7 +123,9 @@ void display_score(uint8_t score) {
 /**
  * @brief Displays a simple smiley face when the player wins.
  */
-void display_victory() {
+void display_victory()
+{
+	won_flag = 1;
     uint8_t smiley[8][8] = {
         {0, 0, 0, 0, 0, 0, 0, 0},
         {0, 1, 0, 0, 0, 0, 1, 0},
@@ -135,6 +146,7 @@ void display_victory() {
             }
         }
     }
+
 }
 
 /**
